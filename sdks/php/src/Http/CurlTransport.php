@@ -31,7 +31,7 @@ final class CurlTransport implements Transport
             $stream = fopen($request->body->path, 'rb');
             if ($stream === false) { throw new TransportException('Could not open audio file'); }
             $options[CURLOPT_UPLOAD] = true;
-            $options[CURLOPT_INFILESIZE_LARGE] = $request->body->size;
+            $options[CURLOPT_INFILESIZE] = $request->body->size;
             $options[CURLOPT_READFUNCTION] = static fn ($handle, $file, int $length): string => fread($stream, $length) ?: '';
         } else {
             $options[CURLOPT_POSTFIELDS] = $request->body;
