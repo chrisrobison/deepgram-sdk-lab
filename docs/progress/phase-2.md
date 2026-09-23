@@ -25,7 +25,7 @@ In progress, 2026-09-23.
 - No live call has been made with a Deepgram credential. No feature is marked supported in parity.
 - Swift Speak WebSocket tests are awaiting the next CI run.
 - PHP has no realtime transport.
-- Voice Agent, stronger SwiftUI showcase, and release tooling remain to be built.
+- An initial Voice Agent client and release dry-run tooling are present. Voice Agent contract/live verification and a stronger SwiftUI showcase remain.
 
 ## Next phase
 

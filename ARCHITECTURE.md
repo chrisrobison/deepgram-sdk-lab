@@ -18,6 +18,8 @@ Swift will use Foundation, URLSession, Codable, actors and AsyncSequence as appr
 
 [features.yaml](parity/features.yaml) records claims independently of generated source. [Parity rules](parity/README.md) define status semantics. Shared wire fixtures will exercise both languages for JSON, query parameters, authentication, error parsing and event decoding. Language-specific tests will cover transport and lifecycle. Live tests will require `DEEPGRAM_API_KEY` and an explicit opt-in. Pull request CI will run offline.
 
+An offline [benchmark harness](docs/benchmarks.md) records decode and generator baselines. It is informational, not a CI performance gate; workload definitions must be made comparable before drawing cross-language conclusions.
+
 ## Releases and another language
 
 For the 0.x lab, the repository uses coordinated SemVer tags because both SwiftPM and Composer consume the root manifests. [ADR 0002](docs/design-decisions/0002-versioning-and-packaging.md) explains the tradeoff and the option to split releases later. The pinned spec commit remains separate generated metadata. `tools/release-dry-run` validates version and manifest consistency without publication. A third language should consume the same snapshot and fixtures, generate its wire types into an isolated directory, then implement its native runtime and parity tests.

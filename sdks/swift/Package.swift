@@ -8,6 +8,7 @@ let package = Package(
     targets: [
         .target(name: "DeepgramSDKLab", path: "Sources/Deepgram"),
         .executableTarget(name: "deepgram-cli", dependencies: ["DeepgramSDKLab"], path: "Examples/CLI"),
+        .executableTarget(name: "deepgram-bench", dependencies: ["DeepgramSDKLab"], path: "Benchmarks/Decode"),
         .testTarget(name: "DeepgramSDKLabTests", dependencies: ["DeepgramSDKLab"], path: "Tests/DeepgramTests")
     ]
 )
