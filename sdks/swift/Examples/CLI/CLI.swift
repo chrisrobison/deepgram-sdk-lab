@@ -1,4 +1,5 @@
 import DeepgramSDKLab
+import DeepgramMicrophone
 import Foundation
 
 @main

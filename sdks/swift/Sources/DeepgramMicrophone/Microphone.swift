@@ -18,20 +18,27 @@ private final class ConverterInput: @unchecked Sendable {
 }
 
 /// Optional example-only capture layer. The SDK core has no AVFoundation dependency.
-final class Microphone: @unchecked Sendable {
-    let chunks: AsyncStream<Data>
+public final class Microphone: @unchecked Sendable {
+    public let chunks: AsyncStream<Data>
+    public let levels: AsyncStream<Double>
     private let continuation: AsyncStream<Data>.Continuation
+    private let levelContinuation: AsyncStream<Double>.Continuation
     private let engine = AVAudioEngine()
     private var converter: AVAudioConverter?
     private var activityCount = 0
+    private let stopLock = NSLock()
+    private var stopped = false
 
-    init() {
+    public init() {
         var receiver: AsyncStream<Data>.Continuation!
         chunks = AsyncStream(bufferingPolicy: .bufferingOldest(32)) { receiver = $0 }
         continuation = receiver
+        var levelReceiver: AsyncStream<Double>.Continuation!
+        levels = AsyncStream(bufferingPolicy: .bufferingNewest(1)) { levelReceiver = $0 }
+        levelContinuation = levelReceiver
     }
 
-    func start() async throws {
+    public func start() async throws {
         let permission = AVCaptureDevice.authorizationStatus(for: .audio)
         if permission == .notDetermined {
             let granted = await withCheckedContinuation { continuation in
@@ -69,13 +76,20 @@ final class Microphone: @unchecked Sendable {
         if activityCount % 10 == 0, let floats = input.floatChannelData?[0] {
             let count = Int(input.frameLength)
             let rms = sqrt((0..<count).reduce(0.0) { $0 + Double(floats[$1] * floats[$1]) } / Double(max(count, 1)))
-            if rms > 0.02 { fputs("Mic level: \(Int(min(rms * 100, 100)))%\n", stderr) }
+            levelContinuation.yield(min(rms * 10, 1))
         }
     }
 
-    func stop() {
+    public func stop() {
+        let shouldStop = stopLock.withLock { () -> Bool in
+            guard !stopped else { return false }
+            stopped = true
+            return true
+        }
+        guard shouldStop else { return }
         engine.inputNode.removeTap(onBus: 0)
         engine.stop()
         continuation.finish()
+        levelContinuation.finish()
     }
 }

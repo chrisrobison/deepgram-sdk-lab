@@ -12,6 +12,7 @@ Swift, from `sdks/swift`:
 swift build
 DEEPGRAM_API_KEY=... swift run deepgram-cli transcribe ./audio.wav
 DEEPGRAM_API_KEY=... swift run deepgram-cli flux
+DEEPGRAM_API_KEY=... swift run deepgram-voice-playground # macOS SwiftUI demo
 ```
 
 PHP, from `sdks/php`:
@@ -31,6 +32,8 @@ For the platform tooling, install PyYAML (`python3 -m pip install PyYAML`), then
 ```
 
 The pinned [OpenAPI and AsyncAPI snapshot](specs/README.md) is checked locally. `./tools/update-spec <full-commit-sha>` is the explicit update path.
+
+The [voice playground](sdks/swift/Examples/VoicePlayground/VoicePlayground.swift) shows connection state, microphone level, transcript, turn events, request ID, errors, and an approximate arrival-lag metric. macOS must grant microphone access to the launching app. The lag estimate compares wall time since connection with the server audio window and is not an end-to-end latency measurement.
 
 The repository root also contains SwiftPM and Composer manifests, so consumers can depend on its Git URL during development. No version tag or registry package has been published yet.
 
