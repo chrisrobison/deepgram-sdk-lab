@@ -35,7 +35,7 @@ The pinned [OpenAPI and AsyncAPI snapshot](specs/README.md) is checked locally. 
 
 The [voice playground](sdks/swift/Examples/VoicePlayground/VoicePlayground.swift) shows connection state, microphone level, transcript, turn events, request ID, errors, and an approximate arrival-lag metric. macOS must grant microphone access to the launching app. The lag estimate compares wall time since connection with the server audio window and is not an end-to-end latency measurement.
 
-The repository root also contains SwiftPM and Composer manifests, so consumers can depend on its Git URL during development. No version tag or registry package has been published yet.
+The repository root also contains SwiftPM and Composer manifests, so consumers can depend on its Git URL during development. No version tag or registry package has been published yet. See the [release dry run](docs/releasing.md) and [staff review](docs/staff-review.md) for the remaining verification work.
 
 ## Feature parity
 
