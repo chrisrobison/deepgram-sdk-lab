@@ -32,6 +32,8 @@ For the platform tooling, install PyYAML (`python3 -m pip install PyYAML`), then
 
 The pinned [OpenAPI and AsyncAPI snapshot](specs/README.md) is checked locally. `./tools/update-spec <full-commit-sha>` is the explicit update path.
 
+The repository root also contains SwiftPM and Composer manifests, so consumers can depend on its Git URL during development. No version tag or registry package has been published yet.
+
 ## Feature parity
 
 Statuses describe this project, not official Deepgram SDKs. [Definitions](parity/README.md).
