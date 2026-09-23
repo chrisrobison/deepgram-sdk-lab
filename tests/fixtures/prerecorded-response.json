@@ -1,0 +1,20 @@
+{
+  "metadata": {
+    "request_id": "550e8400-e29b-41d4-a716-446655440000",
+    "sha256": "fixture",
+    "created": "2026-09-23T00:00:00Z",
+    "duration": 1.25,
+    "channels": 1,
+    "models": ["nova-3"],
+    "model_info": {"nova-3": {"name": "nova-3"}}
+  },
+  "results": {
+    "channels": [{
+      "alternatives": [{
+        "transcript": "Hello world.",
+        "confidence": 0.97,
+        "words": [{"word": "Hello", "start": 0.0, "end": "0.4", "confidence": 0.98}]
+      }]
+    }]
+  }
+}
