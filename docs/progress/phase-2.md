@@ -1,6 +1,6 @@
 # Phase 2 — Swift REST and cross-language proof
 
-In progress, 2026-09-23.
+Completed for the offline REST scope, 2026-09-23. The deficiencies below describe the phase boundary; later phases address some of them.
 
 ## Completed work
 
