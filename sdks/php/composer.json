@@ -1,0 +1,17 @@
+{
+  "name": "chrisrobison/deepgram-sdk-lab",
+  "description": "Independent specification-driven Deepgram PHP SDK lab",
+  "type": "library",
+  "license": "Apache-2.0",
+  "require": {
+    "php": "^8.2",
+    "ext-curl": "*",
+    "ext-json": "*"
+  },
+  "autoload": {
+    "psr-4": {"DeepgramSdkLab\\": "src/"}
+  },
+  "scripts": {
+    "test": "php tests/run.php"
+  }
+}
