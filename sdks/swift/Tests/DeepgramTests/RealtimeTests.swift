@@ -8,8 +8,10 @@ final class FakeSocket: SocketTransport, @unchecked Sendable {
     private var waiter: CheckedContinuation<SocketMessage, Error>?
     private var isClosed = false
     private(set) var sent: [SocketMessage] = []
+    var openError: Error?
+    func snapshotSent() -> [SocketMessage] { lock.withLock { sent } }
 
-    func open() async throws {}
+    func open() async throws { if let openError { throw openError } }
 
     func send(_ message: SocketMessage) async throws {
         try lock.withLock {
@@ -104,4 +106,42 @@ final class RealtimeTests: XCTestCase {
             XCTAssertTrue(detail.contains("1 audio bytes"))
         }
     }
+
+    func testReconnectBeforeAudioAndPartialChunkOrder() async throws {
+        let failed = FakeSocket()
+        failed.openError = DeepgramError.connection("first attempt")
+        let working = FakeSocket()
+        let sequence = SocketSequence([failed, working])
+        let core = RESTClient(apiKey: "test", baseURL: URL(string: "https://api.deepgram.com")!, session: .shared, retryPolicy: .init(), logger: nil)
+        let connection = try await RealtimeListenStream.connect(core: core, path: "/v2/listen", query: [.init(name: "model", value: "flux-general-en")],
+            reconnectPolicy: .init(maxAttempts: 1, delay: .milliseconds(1)), socketFactory: { _ in sequence.next() })
+        try await connection.send(Data([1]))
+        try await connection.send(Data([2]))
+        let sent = working.snapshotSent()
+        if case .data(let first) = sent[0] { XCTAssertEqual(first, Data([1])) } else { XCTFail("First chunk missing") }
+        if case .data(let second) = sent[1] { XCTAssertEqual(second, Data([2])) } else { XCTFail("Second chunk missing") }
+        await connection.close()
+    }
+
+    func testCancelledSendDoesNotWriteAudio() async throws {
+        let socket = FakeSocket()
+        let connection = try await stream(socket)
+        let task = Task {
+            withUnsafeCurrentTask { $0?.cancel() }
+            try await connection.send(Data([1]))
+        }
+        do {
+            try await task.value
+            XCTFail("Expected cancellation")
+        } catch DeepgramError.cancelled {}
+        XCTAssertTrue(socket.snapshotSent().isEmpty)
+        await connection.close()
+    }
+}
+
+private final class SocketSequence: @unchecked Sendable {
+    private let lock = NSLock()
+    private var sockets: [FakeSocket]
+    init(_ sockets: [FakeSocket]) { self.sockets = sockets }
+    func next() -> FakeSocket { lock.withLock { sockets.removeFirst() } }
 }

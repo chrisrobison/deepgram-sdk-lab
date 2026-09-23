@@ -23,6 +23,10 @@ ASYNC_ROOT_TYPES = (
     "ListenV1_ListenV1SpeechStarted", "ListenV2_ListenV2Connected", "ListenV2_ListenV2TurnInfo",
     "ListenV2_ListenV2ConfigureSuccess", "ListenV2_ListenV2ConfigureFailure", "ListenV2_ListenV2FatalError",
     "SpeakV1_SpeakV1Metadata", "SpeakV1_SpeakV1Flushed", "SpeakV1_SpeakV1Cleared", "SpeakV1_SpeakV1Warning",
+) + tuple(
+    message["payload"]["$ref"].split("/")[-1]
+    for key, message in ASYNC_SPEC["components"]["messages"].items()
+    if key.startswith("subpackage_agent/v1.agent.v1-server") and message["name"] != "AgentV1Audio"
 )
 
 

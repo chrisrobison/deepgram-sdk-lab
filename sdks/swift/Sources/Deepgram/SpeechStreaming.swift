@@ -158,6 +158,7 @@ public actor RealtimeSpeechStream {
     }
 
     private func send(_ message: SocketMessage) async throws {
+        if Task.isCancelled { throw DeepgramError.cancelled }
         guard state == .open, let socket else { throw DeepgramError.closed }
         let previous = sendTail
         let next = Task {

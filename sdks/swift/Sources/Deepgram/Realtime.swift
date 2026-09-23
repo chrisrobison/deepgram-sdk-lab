@@ -219,6 +219,7 @@ public actor RealtimeListenStream {
     }
 
     public func send(_ audio: Data) async throws {
+        if Task.isCancelled { throw DeepgramError.cancelled }
         guard state == .open, let socket else { throw DeepgramError.closed }
         guard !audio.isEmpty else { return }
         // Actor methods are reentrant across awaits; chain sends to preserve audio order.
@@ -237,6 +238,7 @@ public actor RealtimeListenStream {
     }
 
     private func sendControl(_ type: String) async throws {
+        if Task.isCancelled { throw DeepgramError.cancelled }
         guard state == .open, let socket else { throw DeepgramError.closed }
         try await enqueue(.text("{\"type\":\"\(type)\"}"), on: socket)
     }

@@ -45,6 +45,7 @@ public struct Deepgram: Sendable {
     public static let version = "0.1.0"
     public let listen: ListenClient
     public let speak: SpeakClient
+    public let agent: AgentClient
 
     public init(
         apiKey: String,
@@ -56,6 +57,7 @@ public struct Deepgram: Sendable {
         let core = RESTClient(apiKey: apiKey, baseURL: baseURL, session: session, retryPolicy: retryPolicy, logger: logger)
         self.listen = ListenClient(core: core)
         self.speak = SpeakClient(core: core)
+        self.agent = AgentClient(apiKey: apiKey)
     }
 }
 

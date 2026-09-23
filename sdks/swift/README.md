@@ -15,4 +15,6 @@ To use this repository as a local SwiftPM package, add `sdks/swift` as a package
 
 For Text-to-Speech streaming v1, call `deepgram.speak.v1.connect(model:)`, then `speak(_:)`, `flush()`, and iterate `events` for audio bytes and metadata. `clear()` discards the current text buffer. Close the stream after consuming the final flush event.
 
+An early Voice Agent client is available through `deepgram.agent.connect(configuration:)`. It waits for `Welcome`, sends `Settings`, and waits for `SettingsApplied` before returning a stream. The default configuration uses Deepgram Listen/Speak and an OpenAI think provider; `additionalAgentFields` permits provider-specific overrides. Voice Agent remains marked planned in the parity table until its contract tests and live handshake are verified.
+
 Automatic reconnect is limited to connections that have sent no audio. Audio replay after an interruption can duplicate or omit speech; in-flight streams report an interruption error so callers can begin a new session deliberately. Events use a bounded 128-element buffer and fail on overflow. Unknown JSON events are forwarded as `.unknown`; malformed JSON appears as `.malformed`.

@@ -2,6 +2,200 @@
 // Deepgram spec commit: 6668bc2d5c3dc720697364f8c2ce3c8c0e27fbc5
 import Foundation
 
+public struct AgentV1AgentV1History0: Codable, Sendable {
+    public let `type`: String
+    public let role: ChannelsAgentV1MessagesAgentV1HistoryOneOf0Role
+    public let content: String
+}
+
+public struct AgentV1AgentV1History1: Codable, Sendable {
+    public let `type`: String
+    public let functionCalls: [ChannelsAgentV1MessagesAgentV1HistoryOneOf1FunctionCallsItems]
+
+    enum CodingKeys: String, CodingKey {
+        case `type`
+        case functionCalls = "function_calls"
+    }
+}
+
+public struct AgentV1_AgentV1AgentAudioDone: Codable, Sendable {
+    public let `type`: String
+}
+
+public struct AgentV1_AgentV1AgentStartedSpeaking: Codable, Sendable {
+    public let `type`: String
+    public let totalLatency: WireNumber
+    public let ttsLatency: WireNumber
+    public let tttLatency: WireNumber
+
+    enum CodingKeys: String, CodingKey {
+        case `type`
+        case totalLatency = "total_latency"
+        case ttsLatency = "tts_latency"
+        case tttLatency = "ttt_latency"
+    }
+}
+
+public struct AgentV1_AgentV1AgentThinking: Codable, Sendable {
+    public let `type`: String
+    public let content: String
+}
+
+public struct AgentV1_AgentV1ConversationText: Codable, Sendable {
+    public let `type`: String
+    public let role: ChannelsAgentV1MessagesAgentV1ConversationTextRole
+    public let content: String
+    public let languagesHinted: [String]?
+    public let languages: [String]?
+
+    enum CodingKeys: String, CodingKey {
+        case `type`
+        case role
+        case content
+        case languagesHinted = "languages_hinted"
+        case languages
+    }
+}
+
+public struct AgentV1_AgentV1Error: Codable, Sendable {
+    public let `type`: ChannelsAgentV1MessagesAgentV1ErrorType
+    public let `description`: String
+    public let code: String
+}
+
+public struct AgentV1_AgentV1FunctionCallCancelled: Codable, Sendable {
+    public let `type`: String
+    public let functions: [ChannelsAgentV1MessagesAgentV1FunctionCallCancelledFunctionsItems]
+}
+
+public struct AgentV1_AgentV1FunctionCallRequest: Codable, Sendable {
+    public let `type`: String
+    public let functions: [ChannelsAgentV1MessagesAgentV1FunctionCallRequestFunctionsItems]
+}
+
+public typealias AgentV1_AgentV1History = JSONValue
+
+public struct AgentV1_AgentV1InjectionRefused: Codable, Sendable {
+    public let `type`: String
+    public let message: String
+}
+
+public struct AgentV1_AgentV1LatencyReport: Codable, Sendable {
+    public let `type`: String
+    public let sttLatency: WireNumber?
+    public let tttTokenLatency: WireNumber?
+    public let tttTextLatency: WireNumber?
+    public let tttToolLatency: WireNumber?
+    public let tttThinkingLatency: WireNumber?
+    public let ttsLatency: WireNumber?
+    public let totalLatency: WireNumber?
+
+    enum CodingKeys: String, CodingKey {
+        case `type`
+        case sttLatency = "stt_latency"
+        case tttTokenLatency = "ttt_token_latency"
+        case tttTextLatency = "ttt_text_latency"
+        case tttToolLatency = "ttt_tool_latency"
+        case tttThinkingLatency = "ttt_thinking_latency"
+        case ttsLatency = "tts_latency"
+        case totalLatency = "total_latency"
+    }
+}
+
+public struct AgentV1_AgentV1ListenUpdated: Codable, Sendable {
+    public let `type`: String
+}
+
+public struct AgentV1_AgentV1PromptUpdated: Codable, Sendable {
+    public let `type`: String
+}
+
+public struct AgentV1_AgentV1ReceiveFunctionCallResponse: Codable, Sendable {
+    public let `type`: String
+    public let id: String?
+    public let name: String
+    public let content: String
+}
+
+public struct AgentV1_AgentV1SettingsApplied: Codable, Sendable {
+    public let `type`: String
+}
+
+public struct AgentV1_AgentV1SpeakUpdated: Codable, Sendable {
+    public let `type`: String
+}
+
+public struct AgentV1_AgentV1ThinkUpdated: Codable, Sendable {
+    public let `type`: String
+}
+
+public struct AgentV1_AgentV1UserStartedSpeaking: Codable, Sendable {
+    public let `type`: String
+}
+
+public struct AgentV1_AgentV1Warning: Codable, Sendable {
+    public let `type`: ChannelsAgentV1MessagesAgentV1WarningType
+    public let `description`: String
+    public let code: String
+}
+
+public struct AgentV1_AgentV1Welcome: Codable, Sendable {
+    public let `type`: String
+    public let requestId: String
+
+    enum CodingKeys: String, CodingKey {
+        case `type`
+        case requestId = "request_id"
+    }
+}
+
+public typealias ChannelsAgentV1MessagesAgentV1ConversationTextRole = String
+
+public typealias ChannelsAgentV1MessagesAgentV1ErrorType = String
+
+public struct ChannelsAgentV1MessagesAgentV1FunctionCallCancelledFunctionsItems: Codable, Sendable {
+    public let id: String
+    public let name: String
+}
+
+public struct ChannelsAgentV1MessagesAgentV1FunctionCallRequestFunctionsItems: Codable, Sendable {
+    public let id: String
+    public let name: String
+    public let arguments: String
+    public let clientSide: Bool
+    public let thoughtSignature: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case arguments
+        case clientSide = "client_side"
+        case thoughtSignature = "thought_signature"
+    }
+}
+
+public typealias ChannelsAgentV1MessagesAgentV1HistoryOneOf0Role = String
+
+public struct ChannelsAgentV1MessagesAgentV1HistoryOneOf1FunctionCallsItems: Codable, Sendable {
+    public let id: String
+    public let name: String
+    public let clientSide: Bool
+    public let arguments: String
+    public let response: String
+    public let thoughtSignature: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case clientSide = "client_side"
+        case arguments
+        case response
+        case thoughtSignature = "thought_signature"
+    }
+}
+
+public typealias ChannelsAgentV1MessagesAgentV1WarningType = String
+
 public typealias ChannelsListenV1MessagesListenV1MetadataType = String
 
 public struct ChannelsListenV1MessagesListenV1ResultsChannel: Codable, Sendable {
