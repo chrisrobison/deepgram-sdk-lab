@@ -1,0 +1,30 @@
+# Claims describe implemented behavior in this repository, not upstream availability.
+features:
+  prerecorded_transcription:
+    label: Prerecorded transcription
+    swift: planned
+    php: planned
+  listen_v1:
+    label: Listen v1 realtime
+    swift: planned
+    php: planned
+  listen_v2_flux:
+    label: Listen v2 / Flux
+    swift: planned
+    php: planned
+  tts_rest_v1:
+    label: Text-to-Speech REST v1
+    swift: planned
+    php: planned
+  tts_streaming_v1:
+    label: Text-to-Speech streaming v1
+    swift: planned
+    php: planned
+  tts_v2:
+    label: Flux Text-to-Speech v2
+    swift: planned
+    php: planned
+  voice_agent:
+    label: Voice Agent
+    swift: planned
+    php: planned

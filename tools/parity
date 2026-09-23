@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+"""Render and validate the README parity table from YAML."""
+
+from __future__ import annotations
+
+import pathlib
+import sys
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+BEGIN = "<!-- parity:start -->"
+END = "<!-- parity:end -->"
+STATUSES = {"supported", "experimental", "partial", "planned", "unsupported"}
+
+
+def main() -> int:
+    try:
+        import yaml
+    except ImportError:
+        print("PyYAML is required: python3 -m pip install PyYAML", file=sys.stderr)
+        return 2
+    try:
+        data = yaml.safe_load((ROOT / "parity/features.yaml").read_text())
+        features = data["features"]
+        if not isinstance(features, dict) or not features:
+            raise ValueError("features must be a non-empty mapping")
+        rows = ["| Capability | Swift | PHP |", "| --- | --- | --- |"]
+        for key, entry in features.items():
+            if not isinstance(key, str) or set(entry) != {"label", "swift", "php"}:
+                raise ValueError(f"invalid feature: {key}")
+            if entry["swift"] not in STATUSES or entry["php"] not in STATUSES:
+                raise ValueError(f"invalid status: {key}")
+            label = entry["label"]
+            if not isinstance(label, str) or "|" in label or "\n" in label:
+                raise ValueError(f"invalid label: {key}")
+            rows.append(f"| {label} | {entry['swift']} | {entry['php']} |")
+        readme = ROOT / "README.md"
+        original = readme.read_text()
+        if original.count(BEGIN) != 1 or original.count(END) != 1:
+            raise ValueError("README parity markers missing or duplicated")
+        prefix, rest = original.split(BEGIN)
+        _, suffix = rest.split(END)
+        rendered = prefix + BEGIN + "\n" + "\n".join(rows) + "\n" + END + suffix
+        if "--check" in sys.argv[1:]:
+            if rendered != original:
+                raise ValueError("README parity table is stale; run ./tools/parity")
+            print("parity table is current")
+        else:
+            readme.write_text(rendered)
+            print("updated README parity table")
+        return 0
+    except (OSError, KeyError, TypeError, ValueError, yaml.YAMLError) as exc:
+        print(f"parity validation failed: {exc}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
