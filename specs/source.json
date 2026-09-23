@@ -1,0 +1,10 @@
+{
+  "repository": "https://github.com/deepgram/deepgram-api-specs",
+  "commit": "6668bc2d5c3dc720697364f8c2ce3c8c0e27fbc5",
+  "retrieved_utc": "2026-09-23",
+  "files": {
+    "openapi.yml": "0d65cf6415837a479f05dcd328f7c167dcc4a3ff22b6be6402207a8c34da98b9",
+    "asyncapi.yml": "496fbcd1cd98e278613cda21bc397f344a46254a5113f4a37bfc85fca3eab174"
+  },
+  "license": "CC-BY-4.0"
+}

@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+"""Refresh the pinned public mirror from one explicitly supplied commit."""
+
+from __future__ import annotations
+
+import datetime
+import hashlib
+import json
+import pathlib
+import re
+import subprocess
+import sys
+import tempfile
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+SPEC_DIR = ROOT / "specs"
+REPOSITORY = "https://github.com/deepgram/deepgram-api-specs"
+
+
+def fetch(url: str) -> bytes:
+    return subprocess.run(
+        ["curl", "--fail", "--silent", "--show-error", "--location", url],
+        check=True, capture_output=True,
+    ).stdout
+
+
+def main() -> int:
+    if len(sys.argv) != 2 or not re.fullmatch(r"[0-9a-f]{40}", sys.argv[1]):
+        print("usage: ./tools/update-spec <full-40-character-commit-sha>", file=sys.stderr)
+        return 2
+    revision = sys.argv[1]
+    raw = f"https://raw.githubusercontent.com/deepgram/deepgram-api-specs/{revision}"
+    try:
+        files = {name: fetch(f"{raw}/{name}") for name in ("openapi.yml", "asyncapi.yml", "LICENSE")}
+        with tempfile.TemporaryDirectory(dir=SPEC_DIR) as temporary:
+            staging = pathlib.Path(temporary)
+            for name, data in files.items():
+                (staging / name).write_bytes(data)
+            metadata = {
+                "repository": REPOSITORY,
+                "commit": revision,
+                "retrieved_utc": datetime.datetime.now(datetime.timezone.utc).date().isoformat(),
+                "files": {name: hashlib.sha256(files[name]).hexdigest() for name in ("openapi.yml", "asyncapi.yml")},
+                "license": "CC-BY-4.0",
+            }
+            (staging / "source.json").write_text(json.dumps(metadata, indent=2) + "\n")
+            for name in files:
+                (staging / name).replace(SPEC_DIR / "upstream" / name)
+            (staging / "source.json").replace(SPEC_DIR / "source.json")
+        return subprocess.call([str(ROOT / "tools/validate-spec")])
+    except subprocess.CalledProcessError as exc:
+        print(f"download failed: {exc}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

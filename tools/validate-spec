@@ -1,0 +1,64 @@
+#!/usr/bin/env python3
+"""Validate the local Deepgram spec snapshot; no network access."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import pathlib
+import re
+import sys
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+SPEC_DIR = ROOT / "specs"
+REQUIRED_HTTP = {"/v1/listen", "/v1/speak", "/v2/speak"}
+REQUIRED_WS = {
+    "/v1/listen", "/v2/listen", "/v1/speak", "/v2/speak", "/v1/agent/converse"
+}
+
+
+def main() -> int:
+    try:
+        import yaml
+    except ImportError:
+        print("PyYAML is required: python3 -m pip install PyYAML", file=sys.stderr)
+        return 2
+
+    try:
+        source = json.loads((SPEC_DIR / "source.json").read_text())
+        if not re.fullmatch(r"[0-9a-f]{40}", source["commit"]):
+            raise ValueError("source commit must be a full SHA-1")
+        if source["repository"] != "https://github.com/deepgram/deepgram-api-specs":
+            raise ValueError("unexpected source repository")
+        if source["license"] != "CC-BY-4.0" or not (SPEC_DIR / "upstream/LICENSE").is_file():
+            raise ValueError("upstream attribution is missing")
+        if set(source["files"]) != {"openapi.yml", "asyncapi.yml"}:
+            raise ValueError("unexpected specification file list")
+
+        for filename, expected_hash in source["files"].items():
+            data = (SPEC_DIR / "upstream" / filename).read_bytes()
+            actual_hash = hashlib.sha256(data).hexdigest()
+            if actual_hash != expected_hash:
+                raise ValueError(f"{filename}: SHA-256 mismatch: {actual_hash}")
+            spec = yaml.safe_load(data)
+            if not isinstance(spec, dict):
+                raise ValueError(f"{filename}: expected YAML object")
+            if filename == "openapi.yml":
+                if spec.get("openapi") != "3.1.0":
+                    raise ValueError("unexpected OpenAPI version")
+                missing = REQUIRED_HTTP - set(spec.get("paths", {}))
+            else:
+                if spec.get("asyncapi") != "2.6.0":
+                    raise ValueError("unexpected AsyncAPI version")
+                missing = REQUIRED_WS - set(spec.get("channels", {}))
+            if missing:
+                raise ValueError(f"{filename}: missing paths: {sorted(missing)}")
+            print(f"{filename}: valid ({len(data)} bytes, SHA-256 {actual_hash})")
+        return 0
+    except (OSError, KeyError, ValueError, yaml.YAMLError) as exc:
+        print(f"spec validation failed: {exc}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
