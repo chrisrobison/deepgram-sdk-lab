@@ -10,6 +10,8 @@ use DeepgramSdkLab\Http\FileBody;
 use DeepgramSdkLab\Http\Request;
 use DeepgramSdkLab\Http\Response;
 use DeepgramSdkLab\Http\Transport;
+use DeepgramSdkLab\Realtime\Frame;
+use DeepgramSdkLab\Realtime\Socket;
 
 final class FakeTransport implements Transport
 {
@@ -20,6 +22,27 @@ final class FakeTransport implements Transport
         $this->request = $request;
         return $this->response;
     }
+}
+
+final class FakeSocket implements Socket
+{
+    /** @var list<Frame> */
+    public array $frames = [];
+    /** @var list<string> */
+    public array $binarySent = [];
+    /** @var list<string> */
+    public array $textSent = [];
+    public bool $closed = false;
+    public bool $connected = false;
+    public function connect(): void { $this->connected = true; }
+    public function sendBinary(string $bytes): void { $this->binarySent[] = $bytes; }
+    public function sendText(string $text): void { $this->textSent[] = $text; }
+    public function receive(): Frame
+    {
+        if ($this->frames === []) { throw new RuntimeException('Simulated server close'); }
+        return array_shift($this->frames);
+    }
+    public function close(): void { $this->closed = true; }
 }
 
 function check(bool $condition, string $message): void
@@ -63,5 +86,36 @@ try {
 } catch (AuthenticationException $error) {
     check($error->requestId === 'auth-id' && $error->getCode() === 401, 'Authentication error context');
 }
+
+$socket = new FakeSocket();
+$socket->frames = [
+    new Frame('{"type":"Connected","request_id":"flux-id","sequence_id":0}', false),
+    new Frame('{"type":"TurnInfo","request_id":"flux-id","sequence_id":1,"event":"EndOfTurn","turn_index":0,"audio_window_start":0,"audio_window_end":"1.3","transcript":"Hello","words":[],"end_of_turn_confidence":0.86}', false),
+    new Frame('{"type":"FutureEvent","detail":2}', false),
+    new Frame('{broken', false),
+];
+$stream = (new Client('test-key', $transport))->listen->connectV2(options: ['encoding' => 'linear16', 'sample_rate' => 16000], socket: $socket);
+check($socket->connected, 'Realtime connect');
+$stream->sendAudio("\x01");
+$stream->sendAudio("\x02");
+check($socket->binarySent === ["\x01", "\x02"], 'Partial audio chunks preserve order');
+$stream->forceEndTurn();
+check($socket->textSent[0] === '{"type":"ForceEndTurn"}', 'Flux control message');
+check($stream->receive()->payload->requestId === 'flux-id', 'Typed Connected event');
+check($stream->receive()->payload->audioWindowEnd === 1.3, 'Typed TurnInfo numeric string');
+check($stream->receive()->type === 'FutureEvent', 'Unknown event preserved');
+check($stream->receive()->type === 'Malformed', 'Malformed event surfaced');
+$stream->close();
+check($socket->closed, 'Client close');
+try { $stream->sendAudio('late'); throw new RuntimeException('Send after close was accepted'); }
+catch (DeepgramSdkLab\ConnectionException) {}
+
+$socket = new FakeSocket();
+$socket->frames = [new Frame('{"type":"Results","channel_index":[0,1],"duration":1,"start":0,"channel":{"alternatives":[]},"metadata":{"request_id":"v1-id","model_info":{"name":"nova-3","version":"1","arch":"test"},"model_uuid":"model-id"}}', false)];
+$stream = (new Client('test-key', $transport))->listen->connectV1(socket: $socket);
+check($stream->receive()->payload->metadata->requestId === 'v1-id', 'Typed v1 Results');
+$stream->finalize();
+check($socket->textSent[0] === '{"type":"Finalize"}', 'V1 control message');
+$stream->close();
 
 echo "PHP offline contracts passed\n";

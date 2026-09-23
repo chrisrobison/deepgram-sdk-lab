@@ -8,6 +8,9 @@ use DeepgramSdkLab\Http\FileBody;
 use DeepgramSdkLab\Http\Request;
 use DeepgramSdkLab\Http\Response;
 use DeepgramSdkLab\Http\Transport;
+use DeepgramSdkLab\Realtime\ListenStream;
+use DeepgramSdkLab\Realtime\PhritySocket;
+use DeepgramSdkLab\Realtime\Socket;
 
 final class Client
 {
@@ -57,6 +60,28 @@ final class Client
             throw new ApiException($response->status, $id, $message);
         }
         throw new TransportException('Retry attempts exhausted');
+    }
+
+    /** @param array<string, string|int|bool> $query */
+    public function openListenStream(string $version, array $query, ?Socket $socket = null): ListenStream
+    {
+        if (!in_array($version, ['v1', 'v2'], true)) { throw new ConfigurationException('Invalid Listen version'); }
+        $parameters = [];
+        foreach ($query as $key => $value) { $parameters[$key] = is_bool($value) ? ($value ? 'true' : 'false') : (string) $value; }
+        $base = rtrim($this->baseUrl, '/');
+        $base = preg_replace('/^https:/', 'wss:', $base) ?? $base;
+        $base = preg_replace('/^http:/', 'ws:', $base) ?? $base;
+        $url = $base . '/' . $version . '/listen' . ($parameters === [] ? '' : '?' . http_build_query($parameters, '', '&', PHP_QUERY_RFC3986));
+        $socket ??= new PhritySocket($url, [
+            'Authorization' => 'Token ' . $this->apiKey,
+            'User-Agent' => 'deepgram-sdk-lab-php/' . self::VERSION,
+        ]);
+        try { $socket->connect(); }
+        catch (\Throwable $error) {
+            try { $socket->close(); } catch (\Throwable) {}
+            throw new ConnectionException('Deepgram WebSocket handshake failed: ' . $error->getMessage(), 0, $error);
+        }
+        return new ListenStream($socket, $version);
     }
 
     private static function errorMessage(string $body): ?string

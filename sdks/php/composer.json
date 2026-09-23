@@ -8,10 +8,16 @@
     "ext-curl": "*",
     "ext-json": "*"
   },
+  "suggest": {
+    "phrity/websocket": "Install ^3.8 to use the optional realtime Listen client"
+  },
   "autoload": {
     "psr-4": {"DeepgramSdkLab\\": "src/"}
   },
   "scripts": {
     "test": "php tests/run.php"
+  },
+  "require-dev": {
+    "phrity/websocket": "^3.8"
   }
 }

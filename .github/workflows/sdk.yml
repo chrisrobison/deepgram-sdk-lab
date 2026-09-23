@@ -35,7 +35,10 @@ jobs:
       - run: composer validate --strict
         working-directory: sdks/php
       - run: composer validate --strict
+      - run: composer install --no-interaction --prefer-dist
+        working-directory: sdks/php
       - run: php tests/run.php
         working-directory: sdks/php
       - run: python3 tests/contract/http_upload.py
+      - run: python3 tests/contract/ws_php.py
       - run: ./tools/release-dry-run

@@ -7,6 +7,8 @@ use DeepgramSdkLab\Generated\ListenV1RequestUrl;
 use DeepgramSdkLab\Generated\ListenV1Response;
 use DeepgramSdkLab\Generated\SpecVersion;
 use DeepgramSdkLab\Http\FileBody;
+use DeepgramSdkLab\Realtime\ListenStream;
+use DeepgramSdkLab\Realtime\Socket;
 use JsonException;
 use Throwable;
 
@@ -33,6 +35,21 @@ final readonly class Listen
     public function transcribeFile(string $path, string $contentType, array $options = []): ListenV1Response
     {
         return $this->decode($this->client->post(SpecVersion::LISTEN_V1_PATH, $options + ['model' => 'nova-3'], new FileBody($path), $contentType));
+    }
+
+    /** @param array<string, string|int|bool> $options */
+    public function connectV1(string $model = 'nova-3', array $options = [], ?Socket $socket = null): ListenStream
+    {
+        return $this->client->openListenStream('v1', $options + ['model' => $model], $socket);
+    }
+
+    /** @param array<string, string|int|bool> $options */
+    public function connectV2(string $model = 'flux-general-en', array $options = [], ?Socket $socket = null): ListenStream
+    {
+        if (array_key_exists('encoding', $options) !== array_key_exists('sample_rate', $options)) {
+            throw new ConfigurationException('Raw Flux audio requires both encoding and sample_rate');
+        }
+        return $this->client->openListenStream('v2', $options + ['model' => $model], $socket);
     }
 
     private function decode(\DeepgramSdkLab\Http\Response $response): ListenV1Response

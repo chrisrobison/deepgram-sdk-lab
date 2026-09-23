@@ -11,8 +11,15 @@ import yaml
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SOURCE = json.loads((ROOT / "specs/source.json").read_text())
-SCHEMAS = yaml.safe_load((ROOT / "specs/upstream/openapi.yml").read_text())["components"]["schemas"]
-ROOT_TYPES = ("ListenV1RequestUrl", "ListenV1Response", "ListenV1AcceptedResponse", "SpeakV1Request")
+REST_SCHEMAS = yaml.safe_load((ROOT / "specs/upstream/openapi.yml").read_text())["components"]["schemas"]
+ASYNC_SCHEMAS = yaml.safe_load((ROOT / "specs/upstream/asyncapi.yml").read_text())["components"]["schemas"]
+SCHEMAS = REST_SCHEMAS | ASYNC_SCHEMAS
+ROOT_TYPES = (
+    "ListenV1RequestUrl", "ListenV1Response", "ListenV1AcceptedResponse", "SpeakV1Request",
+    "ListenV1_ListenV1Results", "ListenV1_ListenV1Metadata", "ListenV1_ListenV1UtteranceEnd", "ListenV1_ListenV1SpeechStarted",
+    "ListenV2_ListenV2Connected", "ListenV2_ListenV2TurnInfo", "ListenV2_ListenV2ConfigureSuccess",
+    "ListenV2_ListenV2ConfigureFailure", "ListenV2_ListenV2FatalError",
+)
 OUTPUT = ROOT / "sdks/php/src/Generated"
 
 
@@ -58,8 +65,10 @@ def php_type(schema: dict) -> str:
     if "$ref" in schema:
         name = schema["$ref"].split("/")[-1]
         resolved = dereference(schema)
-        return name if resolved.get("type") == "object" and resolved.get("properties") else "array"
+        return name if resolved.get("type") == "object" and resolved.get("properties") else php_type(resolved)
     kind = schema.get("type")
+    if "oneOf" in schema or "anyOf" in schema or kind is None:
+        return "mixed"
     return {"array": "array", "object": "array", "string": "float" if schema.get("title") == "float" else "string",
             "number": "float", "integer": "int", "boolean": "bool"}[kind]
 
@@ -72,6 +81,8 @@ def decode_expression(schema: dict, expression: str) -> str:
             return f"{name}::fromArray(Wire::object({expression}))"
         return decode_expression(resolved, expression)
     kind = schema.get("type")
+    if "oneOf" in schema or "anyOf" in schema or kind is None:
+        return expression
     if kind == "array":
         item = decode_expression(schema["items"], "$item")
         return f"array_map(static fn (mixed $item): mixed => {item}, Wire::array({expression}))"
@@ -101,7 +112,7 @@ def render(name: str, schema: dict) -> str:
     for key in ordered:
         kind = php_type(properties[key])
         optional = key not in required
-        lines.append(f"        public {'?' if optional else ''}{kind} ${property_name(key)}{' = null' if optional else ''},")
+        lines.append(f"        public {'?' if optional and kind != 'mixed' else ''}{kind} ${property_name(key)}{' = null' if optional else ''},")
     lines += ["    ) {}", "", "    /** @param array<string, mixed> $data */", "    public static function fromArray(array $data): self", "    {", "        return new self("]
     for key in ordered:
         raw = f"$data['{key}']"

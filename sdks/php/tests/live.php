@@ -17,4 +17,6 @@ $audio = $client->speak->generate('Hello from Deepgram SDK Lab.');
 if ($audio->bytes === '' || $audio->requestId === null) {
     throw new RuntimeException('Live speech response was incomplete');
 }
+$flux = $client->listen->connectV2(options: ['encoding' => 'linear16', 'sample_rate' => 16000]);
+$flux->close();
 echo "PHP live smoke tests passed\n";

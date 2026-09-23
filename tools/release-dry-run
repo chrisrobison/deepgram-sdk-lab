@@ -24,7 +24,8 @@ def main() -> int:
         return 1
     root_composer = json.loads((ROOT / "composer.json").read_text())
     nested_composer = json.loads((ROOT / "sdks/php/composer.json").read_text())
-    if root_composer["name"] != nested_composer["name"] or root_composer["require"] != nested_composer["require"]:
+    if (root_composer["name"] != nested_composer["name"] or root_composer["require"] != nested_composer["require"]
+            or root_composer.get("require-dev") != nested_composer.get("require-dev")):
         print("Composer manifests have drifted", file=sys.stderr)
         return 1
     spec = json.loads((ROOT / "specs/source.json").read_text())
