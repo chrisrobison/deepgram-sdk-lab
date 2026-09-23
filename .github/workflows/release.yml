@@ -1,0 +1,71 @@
+name: Release dry run or publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version from version.json, without v prefix
+        required: true
+        type: string
+      publish:
+        description: Create the Git tag and GitHub release after protected-environment approval
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  platform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install 'PyYAML==6.0.2'
+      - name: Validate requested version
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: test "$RELEASE_VERSION" = "$(python3 -c 'import json; print(json.load(open("version.json"))["project"])')"
+      - run: ./tools/validate-spec
+      - run: ./tools/check-generated
+      - run: ./tools/parity --check
+      - run: ./tools/release-dry-run
+
+  swift:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift test
+
+  php:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: curl, json
+          tools: composer:v2
+      - run: composer install --no-interaction --prefer-dist
+        working-directory: sdks/php
+      - run: php sdks/php/tests/run.php
+      - run: python3 tests/contract/http_upload.py
+      - run: python3 tests/contract/ws_php.py
+
+  publish:
+    if: ${{ inputs.publish }}
+    needs: [platform, swift, php]
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create version tag and GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: gh release create "v$RELEASE_VERSION" --target "$GITHUB_SHA" --title "v$RELEASE_VERSION" --generate-notes

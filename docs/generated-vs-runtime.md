@@ -1,6 +1,6 @@
 # Generated and handwritten ownership
 
-The authoritative input is the pinned [OpenAPI/AsyncAPI snapshot](../specs/README.md). `./tools/generate all` selects the schemas currently used by the public SDKs. The Swift generator emits REST and realtime models under `sdks/swift/Sources/Deepgram/Generated/`; the PHP generator emits REST models under `sdks/php/src/Generated/`. These files carry a generated marker and the source commit. CI runs `./tools/check-generated` and fails if regeneration changes them.
+The authoritative input is the pinned [OpenAPI/AsyncAPI snapshot](../specs/README.md). `./tools/generate all` selects the schemas currently used by the public SDKs. The Swift generator emits REST and realtime models under `sdks/swift/Sources/Deepgram/Generated/`; the PHP generator emits REST and Listen realtime models under `sdks/php/src/Generated/`. These files carry a generated marker and the source commit. CI runs `./tools/check-generated` and fails if regeneration changes them.
 
 Generated files may be deleted and rebuilt. Do not edit them manually. Extend a generator or update the pinned source, regenerate, then review the output. The generator currently selects a narrow schema closure; it does not claim all Deepgram API operations.
 

@@ -2,7 +2,7 @@
 
 An independent, unofficial project exploring a specification-driven platform for language-native Deepgram SDKs. The goal is a practical Swift SDK, followed by PHP, backed by pinned API specifications, shared contracts, and explicit feature parity. Deepgram does not maintain or endorse this repository.
 
-**Current state:** Both SDKs have experimental REST clients. Swift also has experimental Listen v1/v2 and Speak v1 WebSocket clients plus a microphone CLI. Swift and PHP offline tests pass in CI; credential-backed behavior is unverified, so no feature is claimed as supported yet. See [progress](docs/progress/phase-2.md) and [research](docs/research.md).
+**Current state:** Both SDKs have experimental REST and Listen v1/v2 clients. Swift also has experimental Speak v1 streaming and a Voice Agent handshake client, plus a microphone CLI. Swift and PHP offline tests pass in CI; credential-backed behavior is unverified, so no feature is claimed as supported yet. See [progress](docs/progress/phase-3.md) and [research](docs/research.md).
 
 ## Try it
 
@@ -42,12 +42,12 @@ Statuses describe this project, not official Deepgram SDKs. [Definitions](parity
 | Capability | Swift | PHP |
 | --- | --- | --- |
 | Prerecorded transcription | experimental | experimental |
-| Listen v1 realtime | experimental | planned |
-| Listen v2 / Flux | experimental | planned |
+| Listen v1 realtime | experimental | experimental |
+| Listen v2 / Flux | experimental | experimental |
 | Text-to-Speech REST v1 | experimental | experimental |
 | Text-to-Speech streaming v1 | experimental | planned |
 | Flux Text-to-Speech v2 | planned | planned |
-| Voice Agent | planned | planned |
+| Voice Agent | experimental | planned |
 <!-- parity:end -->
 
 ## Architecture

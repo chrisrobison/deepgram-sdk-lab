@@ -7,11 +7,11 @@ features:
   listen_v1:
     label: Listen v1 realtime
     swift: experimental
-    php: planned
+    php: experimental
   listen_v2_flux:
     label: Listen v2 / Flux
     swift: experimental
-    php: planned
+    php: experimental
   tts_rest_v1:
     label: Text-to-Speech REST v1
     swift: experimental
@@ -26,5 +26,5 @@ features:
     php: planned
   voice_agent:
     label: Voice Agent
-    swift: planned
+    swift: experimental
     php: planned

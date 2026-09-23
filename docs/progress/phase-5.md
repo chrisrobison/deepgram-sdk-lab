@@ -16,6 +16,7 @@ In progress, 2026-09-23.
 - `python3 tests/contract/http_upload.py`: passed.
 - `python3 tests/contract/ws_php.py`: passed locally with phrity/websocket 3.8.1.
 - PHP syntax checks passed for generated and handwritten source.
+- PHP 8.2 CI passed REST and WebSocket contracts at commit `a44de7d`.
 
 ## Known deficiencies
 
@@ -29,4 +30,4 @@ The same spec closure and numeric-string decoding rule carried across languages.
 
 ## Next phase
 
-Verify PHP 8.2 CI with the optional adapter, then use live credentials to validate the handshake and update parity claims from evidence.
+Use live credentials to validate the handshake before raising parity claims above experimental.
