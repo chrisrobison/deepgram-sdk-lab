@@ -70,4 +70,20 @@ final class RESTTests: XCTestCase {
             XCTAssertEqual(message, "invalid key")
         }
     }
+
+    func testFileUploadUsesStreamingRequest() async throws {
+        let fixture = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+            .appending(path: "../../../../tests/fixtures/prerecorded-response.json").standardizedFileURL
+        let data = try Data(contentsOf: fixture)
+        let file = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString + ".wav")
+        try Data([1, 2, 3, 4]).write(to: file)
+        defer { try? FileManager.default.removeItem(at: file) }
+        MockURLProtocol.handler = { request in
+            XCTAssertEqual(request.url?.path, "/v1/listen")
+            XCTAssertEqual(request.value(forHTTPHeaderField: "Content-Type"), "audio/wav")
+            return (HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: [:])!, data)
+        }
+        let result = try await client().listen.transcribe(file: file, contentType: "audio/wav")
+        XCTAssertEqual(result.results.channels[0].alternatives?[0].transcript, "Hello world.")
+    }
 }

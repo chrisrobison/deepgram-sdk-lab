@@ -41,7 +41,7 @@ public struct ListenClient: Sendable {
     }
 
     public func transcribe(file: URL, contentType: String, options: TranscriptionOptions = .init()) async throws -> ListenV1Response {
-        try await transcribe(audio: Data(contentsOf: file), contentType: contentType, options: options)
+        try decode(try await core.postFile(path: GeneratedSpec.listenV1Path, query: options.query, file: file, contentType: contentType))
     }
 
     private func decode(_ result: (Data, HTTPURLResponse)) throws -> ListenV1Response {

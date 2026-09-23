@@ -37,4 +37,5 @@ jobs:
       - run: composer validate --strict
       - run: php tests/run.php
         working-directory: sdks/php
+      - run: python3 tests/contract/http_upload.py
       - run: ./tools/release-dry-run

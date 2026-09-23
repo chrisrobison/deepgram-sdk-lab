@@ -67,6 +67,20 @@ struct RESTClient: Sendable {
     let logger: (@Sendable (String) -> Void)?
 
     func post(path: String, query: [URLQueryItem], body: Data, contentType: String) async throws -> (Data, HTTPURLResponse) {
+        var request = try makeRequest(path: path, query: query, contentType: contentType)
+        request.httpBody = body
+        return try await execute(request, path: path, file: nil)
+    }
+
+    func postFile(path: String, query: [URLQueryItem], file: URL, contentType: String) async throws -> (Data, HTTPURLResponse) {
+        guard file.isFileURL, (try? file.resourceValues(forKeys: [.fileSizeKey]).fileSize).map({ $0 > 0 }) == true else {
+            throw DeepgramError.invalidConfiguration("audio file is empty or unreadable")
+        }
+        let request = try makeRequest(path: path, query: query, contentType: contentType)
+        return try await execute(request, path: path, file: file)
+    }
+
+    private func makeRequest(path: String, query: [URLQueryItem], contentType: String) throws -> URLRequest {
         guard !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw DeepgramError.invalidConfiguration("API key is empty")
         }
@@ -80,16 +94,20 @@ struct RESTClient: Sendable {
         guard let url = components.url else { throw DeepgramError.invalidConfiguration("invalid request URL") }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.httpBody = body
         request.setValue("Token \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue(contentType, forHTTPHeaderField: "Content-Type")
         request.setValue("deepgram-sdk-lab-swift/\(Deepgram.version)", forHTTPHeaderField: "User-Agent")
+        return request
+    }
 
+    private func execute(_ request: URLRequest, path: String, file: URL?) async throws -> (Data, HTTPURLResponse) {
         for attempt in 1...retryPolicy.maxAttempts {
             if Task.isCancelled { throw DeepgramError.cancelled }
             do {
                 logger?("POST \(path) attempt \(attempt)")
-                let (data, response) = try await session.data(for: request)
+                let (data, response): (Data, URLResponse)
+                if let file { (data, response) = try await session.upload(for: request, fromFile: file) }
+                else { (data, response) = try await session.data(for: request) }
                 guard let http = response as? HTTPURLResponse else {
                     throw DeepgramError.malformedResponse(requestID: nil, detail: "missing HTTP response")
                 }

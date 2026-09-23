@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace DeepgramSdkLab;
 
 use DeepgramSdkLab\Http\CurlTransport;
+use DeepgramSdkLab\Http\FileBody;
 use DeepgramSdkLab\Http\Request;
 use DeepgramSdkLab\Http\Response;
 use DeepgramSdkLab\Http\Transport;
@@ -33,7 +34,7 @@ final class Client
     }
 
     /** @param array<string, string|int|bool> $query */
-    public function post(string $path, array $query, string $body, string $contentType): Response
+    public function post(string $path, array $query, string|FileBody $body, string $contentType): Response
     {
         $parameters = [];
         foreach ($query as $key => $value) { $parameters[$key] = is_bool($value) ? ($value ? 'true' : 'false') : (string) $value; }

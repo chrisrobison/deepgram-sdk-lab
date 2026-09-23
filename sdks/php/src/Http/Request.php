@@ -10,6 +10,6 @@ final readonly class Request
         public string $method,
         public string $url,
         public array $headers,
-        public string $body,
+        public string|FileBody $body,
     ) {}
 }

@@ -6,6 +6,7 @@ namespace DeepgramSdkLab;
 use DeepgramSdkLab\Generated\ListenV1RequestUrl;
 use DeepgramSdkLab\Generated\ListenV1Response;
 use DeepgramSdkLab\Generated\SpecVersion;
+use DeepgramSdkLab\Http\FileBody;
 use JsonException;
 use Throwable;
 
@@ -31,9 +32,7 @@ final readonly class Listen
     /** @param array<string, string|int|bool> $options */
     public function transcribeFile(string $path, string $contentType, array $options = []): ListenV1Response
     {
-        $audio = @file_get_contents($path);
-        if ($audio === false) { throw new ConfigurationException("Cannot read audio file: $path"); }
-        return $this->transcribeBytes($audio, $contentType, $options);
+        return $this->decode($this->client->post(SpecVersion::LISTEN_V1_PATH, $options + ['model' => 'nova-3'], new FileBody($path), $contentType));
     }
 
     private function decode(\DeepgramSdkLab\Http\Response $response): ListenV1Response
