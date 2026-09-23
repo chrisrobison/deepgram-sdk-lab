@@ -2,15 +2,32 @@
 
 An independent, unofficial project exploring a specification-driven platform for language-native Deepgram SDKs. The goal is a practical Swift SDK, followed by PHP, backed by pinned API specifications, shared contracts, and explicit feature parity. Deepgram does not maintain or endorse this repository.
 
-**Current state:** Phase 0 research and Phase 1 repository foundation. No SDK functions are implemented yet. See the [progress log](docs/progress/phase-0.md) and [research](docs/research.md).
+**Current state:** Both SDKs have REST prototypes. Swift also has a Listen v1/v2 WebSocket runtime and a microphone CLI. Swift builds and PHP offline contracts pass locally; credential-backed checks and Swift XCTest are pending, so no feature is claimed as supported yet. See [progress](docs/progress/phase-2.md) and [research](docs/research.md).
 
-## Try the foundation
+## Try it
 
-Install PyYAML (`python3 -m pip install PyYAML`), then run:
+Swift, from `sdks/swift`:
+
+```sh
+swift build
+DEEPGRAM_API_KEY=... swift run deepgram-cli transcribe ./audio.wav
+DEEPGRAM_API_KEY=... swift run deepgram-cli flux
+```
+
+PHP, from `sdks/php`:
+
+```sh
+composer install
+DEEPGRAM_API_KEY=... php examples/transcribe.php ./audio.wav
+php tests/run.php
+```
+
+For the platform tooling, install PyYAML (`python3 -m pip install PyYAML`), then run:
 
 ```sh
 ./tools/validate-spec
 ./tools/parity --check
+./tools/check-generated
 ```
 
 The pinned [OpenAPI and AsyncAPI snapshot](specs/README.md) is checked locally. `./tools/update-spec <full-commit-sha>` is the explicit update path.
@@ -43,8 +60,26 @@ flowchart LR
   F --> E
 ```
 
-Generated models will be owned by a reproducible generator. Authentication, HTTP and WebSocket lifecycle, retry, streaming, and developer-facing APIs belong to handwritten language-native code. See [architecture](ARCHITECTURE.md).
+Generated models are owned by `./tools/generate swift|php|all`. Authentication, HTTP and WebSocket lifecycle, retry, streaming, and developer-facing APIs belong to handwritten language-native code. See [architecture](ARCHITECTURE.md).
 
-Swift and PHP install and transcription examples will be added when those packages actually exist. This README will not show nonworking usage as runnable code.
+Minimal Swift API:
+
+```swift
+let deepgram = Deepgram(apiKey: apiKey)
+let result = try await deepgram.listen.transcribe(file: audioURL, contentType: "audio/wav")
+print(result.results.channels.first?.alternatives?.first?.transcript ?? "")
+```
+
+Minimal PHP API:
+
+```php
+$deepgram = new DeepgramSdkLab\Client(getenv('DEEPGRAM_API_KEY'));
+$result = $deepgram->listen->transcribeFile('audio.wav', 'audio/wav');
+echo $result->results->channels[0]->alternatives[0]->transcript;
+```
+
+## Looking for work
+
+I’m [Christopher Robison](https://github.com/chrisrobison), and I’m exploring staff-level developer experience and SDK platform roles. If this work is useful, reach me through GitHub. This is a personal project and is not affiliated with Deepgram.
 
 Original project code and prose are Apache 2.0 licensed. Vendored Deepgram specs are [CC BY 4.0](specs/README.md), with source attribution retained.

@@ -1,0 +1,37 @@
+name: SDKs
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  generated:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install 'PyYAML==6.0.2'
+      - run: ./tools/check-generated
+
+  swift:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift test
+        working-directory: sdks/swift
+
+  php:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: curl, json
+          tools: composer:v2
+      - run: composer validate --strict
+        working-directory: sdks/php
+      - run: php tests/run.php
+        working-directory: sdks/php

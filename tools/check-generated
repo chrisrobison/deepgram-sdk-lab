@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+root="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$root"
+./tools/generate all
+git diff --exit-code -- sdks/swift/Sources/Deepgram/Generated sdks/php/src/Generated
+if [[ -n "$(git ls-files --others --exclude-standard -- sdks/swift/Sources/Deepgram/Generated sdks/php/src/Generated)" ]]; then
+  echo 'generated files are untracked' >&2
+  exit 1
+fi
+echo 'generated code is current'
