@@ -82,6 +82,7 @@ public actor RealtimeListenStream {
     private var continuation: AsyncThrowingStream<ListenEvent, Error>.Continuation
     private var socket: (any SocketTransport)?
     private var receiveTask: Task<Void, Never>?
+    private var sendTail: Task<Void, Error>?
     private var audioBytesSent = 0
     private var reconnectAttempts = 0
 
@@ -105,9 +106,12 @@ public actor RealtimeListenStream {
     }
 
     private func request() throws -> URLRequest {
-        guard !core.apiKey.isEmpty else { throw DeepgramError.invalidConfiguration("API key is empty") }
+        guard !core.apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw DeepgramError.invalidConfiguration("API key is empty") }
         guard var components = URLComponents(url: core.baseURL, resolvingAgainstBaseURL: false) else {
             throw DeepgramError.invalidConfiguration("invalid base URL")
+        }
+        guard components.scheme == "https" || (components.scheme == "http" && ["localhost", "127.0.0.1"].contains(components.host ?? "")) else {
+            throw DeepgramError.invalidConfiguration("WebSocket base URL must use HTTPS except for localhost")
         }
         components.scheme = components.scheme == "https" ? "wss" : "ws"
         components.path = path
@@ -127,6 +131,7 @@ public actor RealtimeListenStream {
             do {
                 try await candidate.open()
                 socket = candidate
+                sendTail = nil
                 state = .open
                 beginReceiving(from: candidate)
                 return
@@ -216,8 +221,9 @@ public actor RealtimeListenStream {
     public func send(_ audio: Data) async throws {
         guard state == .open, let socket else { throw DeepgramError.closed }
         guard !audio.isEmpty else { return }
-        try await socket.send(.data(audio))
+        // Actor methods are reentrant across awaits; chain sends to preserve audio order.
         audioBytesSent += audio.count
+        try await enqueue(.data(audio), on: socket)
     }
 
     public func forceEndTurn() async throws {
@@ -232,12 +238,23 @@ public actor RealtimeListenStream {
 
     private func sendControl(_ type: String) async throws {
         guard state == .open, let socket else { throw DeepgramError.closed }
-        try await socket.send(.text("{\"type\":\"\(type)\"}"))
+        try await enqueue(.text("{\"type\":\"\(type)\"}"), on: socket)
+    }
+
+    private func enqueue(_ message: SocketMessage, on socket: any SocketTransport) async throws {
+        let previous = sendTail
+        let next = Task {
+            try await previous?.value
+            try await socket.send(message)
+        }
+        sendTail = next
+        try await next.value
     }
 
     public func close() async {
         guard state != .closed else { return }
         state = .closing
+        try? await sendTail?.value
         try? await socket?.send(.text("{\"type\":\"CloseStream\"}"))
         finish()
     }
@@ -286,7 +303,7 @@ private final class OpenObserver: NSObject, URLSessionWebSocketDelegate, @unchec
     }
 }
 
-private final class NativeSocket: SocketTransport, @unchecked Sendable {
+final class NativeSocket: SocketTransport, @unchecked Sendable {
     private let observer = OpenObserver()
     private let session: URLSession
     private let task: URLSessionWebSocketTask
