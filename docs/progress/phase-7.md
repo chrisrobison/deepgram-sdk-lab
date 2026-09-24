@@ -7,6 +7,7 @@ Review performed 2026-09-23. The [findings](../staff-review.md) record what is m
 - Corrected architecture documentation that still described shipped generators and runtimes in the future tense.
 - Confirmed the generated-code boundary, pinned provenance, parity semantics, and protected release path.
 - Verified offline CI, generator drift, and the release dry run. Scanned tracked project files for obvious credential patterns; none were found.
+- After local Xcode 27 license acceptance, root `swift test` passed: 15 tests executed, 3 credential-gated live tests skipped, 0 failures.
 
 ## Known deficiencies
 
